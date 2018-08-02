@@ -4,14 +4,16 @@
 
     
   <url>
-    <loc>https://eviloh.github.io/2018/08/01/xss%E8%BF%87%E6%BB%A4%E9%80%9F%E6%9F%A5%E8%A1%A8/</loc>
-    <lastmod>2018-08-02T02:35:26.174Z</lastmod>
+    <loc>https://eviloh.github.io/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet%E7%A0%94%E7%A9%B6/</loc>
+    <lastmod>2018-08-02T03:38:44.487Z</lastmod>
     <data>
         <display>
-        <title>xss过滤速查表</title>
-        <pubTime>2018-08-01T15:42:15.000Z</pubTime>
+        <title>XSS Filter Evasion Cheat Sheet研究</title>
+        <pubTime>2018-07-30T14:02:19.000Z</pubTime>
         
         <tag>XSS</tag>
+         
+        <tag>vulns scanner</tag>
          
          
            
@@ -21,16 +23,14 @@
 
     
   <url>
-    <loc>https://eviloh.github.io/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet%E7%A0%94%E7%A9%B6/</loc>
-    <lastmod>2018-08-01T15:41:48.398Z</lastmod>
+    <loc>https://eviloh.github.io/2018/08/01/xss%E8%BF%87%E6%BB%A4%E9%80%9F%E6%9F%A5%E8%A1%A8/</loc>
+    <lastmod>2018-08-02T03:37:36.120Z</lastmod>
     <data>
         <display>
-        <title>XSS Filter Evasion Cheat Sheet研究</title>
-        <pubTime>2018-07-30T14:02:19.000Z</pubTime>
+        <title>xss过滤速查表</title>
+        <pubTime>2018-08-01T15:42:15.000Z</pubTime>
         
         <tag>XSS</tag>
-         
-        <tag>vulns scanner</tag>
          
          
            
