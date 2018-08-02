@@ -2,4 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 
+    
+  <url>
+    <loc>http://127.0.0.1:4000/2018/08/01/xss%E8%BF%87%E6%BB%A4%E9%80%9F%E6%9F%A5%E8%A1%A8/</loc>
+    <lastmod>2018-08-02T02:35:26.174Z</lastmod>
+    <data>
+        <display>
+        <title>xss过滤速查表</title>
+        <pubTime>2018-08-01T15:42:15.000Z</pubTime>
+        
+        <tag>XSS</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet%E7%A0%94%E7%A9%B6/</loc>
+    <lastmod>2018-08-01T15:41:48.398Z</lastmod>
+    <data>
+        <display>
+        <title>XSS Filter Evasion Cheat Sheet研究</title>
+        <pubTime>2018-07-30T14:02:19.000Z</pubTime>
+        
+        <tag>XSS</tag>
+         
+        <tag>vulns scanner</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://127.0.0.1:4000/2017/03/02/BKP2017-Writeup-Accelerated-zone/</loc>
+    <lastmod>2018-07-29T13:18:20.176Z</lastmod>
+    <data>
+        <display>
+        <title>BKP2017-Writeup-Accelerated.zone</title>
+        <pubTime>2017-03-02T12:41:42.000Z</pubTime>
+        
+        <tag>ctf</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
 </urlset>
