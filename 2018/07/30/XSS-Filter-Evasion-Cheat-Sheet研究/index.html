@@ -78,7 +78,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="XSS," />
+  <meta name="keywords" content="XSS,vulns scanner," />
 
 
 
@@ -95,7 +95,7 @@
 
 
 <meta name="description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的暴力扫描，而我的任务是修改为类似于SQLMAP的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况判断">
-<meta name="keywords" content="XSS">
+<meta name="keywords" content="XSS,vulns scanner">
 <meta property="og:type" content="article">
 <meta property="og:title" content="XSS Filter Evasion Cheat Sheet研究">
 <meta property="og:url" content="http://127.0.0.1:4000/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/index.html">
@@ -105,7 +105,7 @@
 <meta property="og:image" content="http://127.0.0.1:4000/images/XSS_Filter/js_statement.png">
 <meta property="og:image" content="http://127.0.0.1:4000/images/XSS_Filter/network.png">
 <meta property="og:image" content="http://127.0.0.1:4000/images/XSS_Filter/success.png">
-<meta property="og:updated_time" content="2018-08-01T15:37:05.934Z">
+<meta property="og:updated_time" content="2018-08-01T15:41:48.398Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="XSS Filter Evasion Cheat Sheet研究">
 <meta name="twitter:description" content="前言这段时间在公司写XSS扫描器，之前留下的脚本是遍历payload list的暴力扫描，而我的任务是修改为类似于SQLMAP的智能扫描模式。 在寻找到输入输出点之后，我开始思考智能化扫描能给扫描器带来什么样的提升。 直到今天，我才有了一个初步的答案：根据上下文环境，定制payload。 定制化的payload不仅能够根据WEB前端框架选择payload以减少扫描流量，还能根据输出点的实际情况判断">
@@ -408,6 +408,8 @@
           
             <a href="/tags/XSS/" rel="tag"># XSS</a>
           
+            <a href="/tags/vulns-scanner/" rel="tag"># vulns scanner</a>
+          
         </div>
       
 
@@ -428,6 +430,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/01/xss过滤速查表/" rel="prev" title="xss过滤速查表">
+                xss过滤速查表 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -511,7 +517,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -524,7 +530,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
