@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="vulns scanner,xss,chrome," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言Headless chrome是Google新推出的无界面浏览器。 相比于之前的无界面浏览器，如PhantomJS，headless chrome有着Google大厂维护的先天优势和chrome强大调试工具的后天加成。 随着发展，很可能演化为如buipsuite一样的web神器。 趁着这次实习，我对headless chrome以及puppeteer，一套专门控制chrome和DevTools">
+<meta name="keywords" content="vulns scanner,xss,chrome">
+<meta property="og:type" content="article">
+<meta property="og:title" content="headless chrome &amp; pptr初探">
+<meta property="og:url" content="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/index.html">
+<meta property="og:site_name" content="eviloH&#39;s space">
+<meta property="og:description" content="前言Headless chrome是Google新推出的无界面浏览器。 相比于之前的无界面浏览器，如PhantomJS，headless chrome有着Google大厂维护的先天优势和chrome强大调试工具的后天加成。 随着发展，很可能演化为如buipsuite一样的web神器。 趁着这次实习，我对headless chrome以及puppeteer，一套专门控制chrome和DevTools">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/images/pptr/geteventlistener.png">
+<meta property="og:image" content="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/images/pptr/domdebugger.png">
+<meta property="og:image" content="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/images/pptr/extension.png">
+<meta property="og:updated_time" content="2018-08-05T16:01:39.294Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="headless chrome &amp; pptr初探">
+<meta name="twitter:description" content="前言Headless chrome是Google新推出的无界面浏览器。 相比于之前的无界面浏览器，如PhantomJS，headless chrome有着Google大厂维护的先天优势和chrome强大调试工具的后天加成。 随着发展，很可能演化为如buipsuite一样的web神器。 趁着这次实习，我对headless chrome以及puppeteer，一套专门控制chrome和DevTools">
+<meta name="twitter:image" content="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/images/pptr/geteventlistener.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/"/>
+
+
+
+
+
+  <title>headless chrome & pptr初探 | eviloH's space</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">eviloH's space</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">想写就写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://eviloh.github.io/2018/08/05/headless-chrome-pptr初探/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="eviloH">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/zy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="eviloH's space">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">headless chrome & pptr初探</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-05T19:35:06+08:00">
+                2018-08-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/05/headless-chrome-pptr初探/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/2018/08/05/headless-chrome-pptr初探/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/08/05/headless-chrome-pptr初探/" class="leancloud_visitors" data-flag-title="headless chrome & pptr初探">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Headless chrome是Google新推出的无界面浏览器。 相比于之前的无界面浏览器，如PhantomJS，headless chrome有着Google大厂维护的先天优势和chrome强大调试工具的后天加成。 随着发展，很可能演化为如buipsuite一样的web神器。 趁着这次实习，我对headless chrome以及puppeteer，一套专门控制chrome和DevTools的用户级API有了初步的认识，在此将踩过的坑和一些解决问题的思路记录在此。</p>
+<h1 id="相关概念简介"><a href="#相关概念简介" class="headerlink" title="相关概念简介"></a>相关概念简介</h1><h2 id="headless-chrome"><a href="#headless-chrome" class="headerlink" title="headless chrome"></a>headless chrome</h2><p>也称为无头浏览器，及chrome的无界面版本。 当我们要在没有桌面环境的服务器上运行浏览器或是进行一些自动化测试的时候，我们希望能够操纵一个浏览器来完成工作。 相比起urllib、 requests这些http请求模块，无头浏览器的特点在于其能够将http response解析成DOM树。 因此，无头浏览器被广泛应用在爬虫、 XSS自动化检测等需要渲染DOM树等需求当中。 当headless chrome启动之后，它会默认监听9222端口，接受指令并执行。 headless chrome控制指令遵循<a href="https://chromedevtools.github.io/devtools-protocol/" target="_blank" rel="noopener">Chrome DevTools Protocol</a>协议。 使用这个协议，我们不仅能控制用户鼠标、 键盘事件，得到页面的内容，还可以使用chrome调试工具。 总之，chrome本身能做到的，我们都可以通过DevTools做到。</p>
+<h2 id="DevTools-Protocol"><a href="#DevTools-Protocol" class="headerlink" title="DevTools Protocol"></a>DevTools Protocol</h2><p>与无头浏览器交互的协议，可以直接使用websocket与开启的chrome进行通信。 所有的控制指令都以json通信，格式大约是下面的样子：<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line"><span class="attr">"id"</span>: id,</span><br><span class="line"><span class="attr">"method"</span>: command,</span><br><span class="line"><span class="attr">"params"</span>: params</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>例如，我要要浏览器打开访问一个页面，控制数据如下：<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line"><span class="attr">"id"</span>: <span class="number">2</span>,</span><br><span class="line"><span class="attr">"method"</span>: <span class="string">"Page.navigate"</span>,</span><br><span class="line"><span class="attr">"params"</span>: &#123;<span class="attr">"url"</span>: <span class="string">"https://www.github.com"</span>&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>浏览器便会访问<a href="https://www.github.com。" target="_blank" rel="noopener">https://www.github.com。</a> 返回的数据也都以json格式传输。 当然，要直接以websocket与chrome交互是非常不方便且不直观的。 为了让控制浏览器跟接近于真实用户，便有了puppeteer和pyppeteer这样的框架。</p>
+<h2 id="puppeteer和pyppeteer"><a href="#puppeteer和pyppeteer" class="headerlink" title="puppeteer和pyppeteer"></a>puppeteer和pyppeteer</h2><p>鉴于使用Chrome DevTools Protocol非常违反用户操作浏览器的习惯，便有了各种封装好的API。 puppeteer便是Google团队官方提供的API工具，它的特点是：像用户一样操作浏览器。 例如，我们想进行一次搜索功能，习惯是打开一个浏览器，选择一个页面，输入网址并回车，点击其中一个搜索结果，截图并保存，最后关闭浏览器。 这在puppeteer中，可以用如下代码做到：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> puppeteer = <span class="built_in">require</span>(<span class="string">'puppeteer'</span>);</span><br><span class="line"></span><br><span class="line">(<span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> browser = <span class="keyword">await</span> puppeteer.launch();</span><br><span class="line">  <span class="keyword">const</span> page = <span class="keyword">await</span> browser.newPage();</span><br><span class="line">  <span class="keyword">await</span> page.goto(<span class="string">'https://example.com'</span>);</span><br><span class="line">  <span class="keyword">await</span> page.click(<span class="string">"button"</span>);</span><br><span class="line">  <span class="keyword">await</span> page.screenshot(&#123;<span class="attr">path</span>: <span class="string">'example.png'</span>&#125;);</span><br><span class="line">  <span class="keyword">await</span> browser.close();</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure></p>
+<p>以上代码无需任何解释，一看便懂，非常符合用户的使用习惯。 因此，pptr上手非常简单。 官方提供的puppeteer是nodejs模块，如果要在python中使用，可以使用pyppeteer。 pyppeteer是puppeteer的python移植版，其作者力求更上puppeteer的所有更新，但是自己不会增加新的特性。 要使用pyppeteer也可以直接翻阅puppeteer的api文档，几乎所有的方法和参数都完全一致。 上面的样例代码在python中的实现如下：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">from</span> pyppeteer <span class="keyword">import</span> launch</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    browser = <span class="keyword">await</span> launch()</span><br><span class="line">    page = <span class="keyword">await</span> browser.newPage()</span><br><span class="line">    <span class="keyword">await</span> page.goto(<span class="string">'http://example.com'</span>)</span><br><span class="line">    <span class="keyword">await</span> page.click(<span class="string">"button"</span>);</span><br><span class="line">    <span class="keyword">await</span> page.screenshot(&#123;<span class="string">'path'</span>: <span class="string">'example.png'</span>&#125;)</span><br><span class="line">    <span class="keyword">await</span> browser.close()</span><br><span class="line"></span><br><span class="line">asyncio.get_event_loop().run_until_complete(main())</span><br></pre></td></tr></table></figure></p>
+<h1 id="常用技巧"><a href="#常用技巧" class="headerlink" title="常用技巧"></a>常用技巧</h1><p>下面介绍一些使用pptr开发过程中常用的一些技巧，这些技巧在XSS扫描和爬虫等应用中相当实用。</p>
+<h2 id="拦截请求"><a href="#拦截请求" class="headerlink" title="拦截请求"></a>拦截请求</h2><p>在爬虫和XSS扫描中，我们需要更多的与页面交互以触发更多的DOM事件，这其中可能会涉及一些url请求。 如果我们需要对请求进行读取和修改，可以为页面设置拦截器，拦截request和response。 要启用拦截器先必须使用page.setRequestInterception()方法。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">await</span> page.setRequestInterception(<span class="keyword">True</span>)</span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">request_handler</span><span class="params">(request)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> meta[<span class="string">'method'</span>] == <span class="string">'POST'</span>:</span><br><span class="line">        overrides = &#123;</span><br><span class="line">            <span class="string">'method'</span>: <span class="string">'POST'</span>,</span><br><span class="line">            <span class="string">'postData'</span>: meta[<span class="string">'data'</span>],</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">await</span> request.continue_(overrides=overrides)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">await</span> request.continue_()</span><br><span class="line"></span><br><span class="line">page.on(<span class="string">"request"</span>, request_handler)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">response_handler</span><span class="params">(response)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> response.status == <span class="number">404</span> <span class="keyword">and</span> response.url == meta[<span class="string">'url'</span>]:</span><br><span class="line">        print(<span class="string">"GOT NEW RESPONSE 404"</span>)</span><br><span class="line">        self.is_404 = <span class="keyword">True</span></span><br><span class="line"></span><br><span class="line">page.on(<span class="string">'response'</span>, response_handler)</span><br></pre></td></tr></table></figure></p>
+<p>在上面的例子中，我使用拦截器来讲get请求修改为post请求。 原因是pptr中的goto方法只能够发起get请求，要修改headers和cookies，或者将请求方法改为post，可以用request.continue_(overrides=overrides)修改。</p>
+<h2 id="植入js代码"><a href="#植入js代码" class="headerlink" title="植入js代码"></a>植入js代码</h2><p>有时我们需要在页面中执行一些js代码进行查询或运算，然后获得返回结果。 可以用page.evaluate()方法植入js代码执行。 例如，我用如下代码检测web应用前端框架：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">framework = <span class="keyword">await</span> page.evaluate(<span class="string">'''() =&gt;&#123;</span></span><br><span class="line"><span class="string">    let framework = &#123;&#125;</span></span><br><span class="line"><span class="string">    try&#123;</span></span><br><span class="line"><span class="string">        $("head");</span></span><br><span class="line"><span class="string">        framework['jquery'] = true;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    catch(err)&#123;</span></span><br><span class="line"><span class="string">        framework['jquery'] = false;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    try&#123;</span></span><br><span class="line"><span class="string">        angular.module;</span></span><br><span class="line"><span class="string">        framework['angular'] = true;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    catch(err)&#123;</span></span><br><span class="line"><span class="string">        framework['angular'] = false;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    return framework;</span></span><br><span class="line"><span class="string">&#125;'''</span>)</span><br></pre></td></tr></table></figure></p>
+<p>上述evaluate方法与前面使用同一个上下文。 如果要在新的上下文运行，可以使用page.evaluateOnNewDocument()方法。</p>
+<h2 id="注册函数"><a href="#注册函数" class="headerlink" title="注册函数"></a>注册函数</h2><p>进行XSS测试的时候，我们通常会注入类似<code>&lt;script&gt;alert(1);&lt;/script&gt;</code>这样的代码，但alert函数被各种waf过滤，所以我推荐注册一个新的函数以防被waf过滤。 代码如下：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">report</span><span class="params">(message)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> message == <span class="number">1</span>:</span><br><span class="line">        print(<span class="string">"[+++++++++++] FOUND XSS!!!"</span>)</span><br><span class="line">        self.found_xss = <span class="keyword">True</span></span><br><span class="line">        report_bug(method, url, data)</span><br><span class="line"></span><br><span class="line"><span class="keyword">await</span> page.exposeFunction(<span class="string">'holive'</span>, <span class="keyword">lambda</span> message: report(message))</span><br></pre></td></tr></table></figure></p>
+<p>注册完毕之后，我们可以以<code>&lt;script&gt;holive(1);&lt;/script&gt;</code>作为payload。 若代码被执行，我们注册的函数便会回调并且上报漏洞。</p>
+<h2 id="使用开发者工具"><a href="#使用开发者工具" class="headerlink" title="使用开发者工具"></a>使用开发者工具</h2><p>我在开发过程中遇到这样一个需求：给定一个DOM节点，返回该节点注册的所有事件。 这在chrome的开发者工具中，可以直接用getEventListener()方法访问：<br><img src="images/pptr/geteventlistener.png" alt="geteventlistener"><br>然而，在js中我们并不能调用这个方法。 那么要怎么访问这个方法呢？查询Chrome DevTools Protocol，我们发现了这个方法：<br><img src="images/pptr/domdebugger.png" alt="domdebugger"><br>遗憾的是，pptr也没有封装这个函数。 但pptr给我们提供了一个创建Chrome DevTools Protocol session的接口, 通过这个session，我们可以直接使用DevTools Protocol下发控制指令。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> puppeteer = <span class="built_in">require</span>(<span class="string">'puppeteer'</span>);</span><br><span class="line"></span><br><span class="line">(<span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> browser = <span class="keyword">await</span> puppeteer.launch(&#123;<span class="attr">headless</span>: <span class="literal">false</span>,<span class="attr">args</span>: [<span class="string">'--ignore-certificate-errors'</span>, <span class="string">'--disable-web-security'</span>, <span class="string">'--allow-running-insecure-content'</span>, <span class="string">'--disable-xss-auditor'</span>, <span class="string">'--no-sandbox'</span>, <span class="string">'--disable-setuid-sandbox'</span>]&#125;);</span><br><span class="line">  <span class="keyword">const</span> page = <span class="keyword">await</span> browser.newPage();</span><br><span class="line">  <span class="keyword">await</span> page.goto(url);</span><br><span class="line">  <span class="keyword">const</span> client = <span class="keyword">await</span> page.target().createCDPSession();</span><br><span class="line">  <span class="keyword">await</span> page.focus(<span class="string">'input'</span>);</span><br><span class="line">  <span class="keyword">let</span> DOM = <span class="keyword">await</span> client.send(<span class="string">'DOM.getDocument'</span>);</span><br><span class="line">  <span class="keyword">let</span> nodes = <span class="keyword">await</span> client.send(<span class="string">'DOM.querySelectorAll'</span>,&#123;<span class="attr">nodeId</span>: DOM.root.nodeId,<span class="attr">selector</span>: <span class="string">"#ww"</span>&#125;);</span><br><span class="line">  <span class="keyword">let</span> obj = <span class="keyword">await</span> client.send(<span class="string">'DOM.resolveNode'</span>,&#123;<span class="attr">nodeId</span>:nodes.nodeIds[<span class="number">0</span>]&#125;);</span><br><span class="line">  <span class="keyword">await</span> page.keyboard.type(<span class="string">"payload"</span>);</span><br><span class="line">  <span class="keyword">let</span> listener =   <span class="keyword">await</span> client.send(<span class="string">'DOMDebugger.getEventListeners'</span>, &#123;<span class="attr">objectId</span>: obj.object.objectId&#125;).catch(<span class="function"><span class="params">e</span>=&gt;</span>&#123;<span class="built_in">console</span>.log(e)&#125;);</span><br><span class="line">  <span class="built_in">console</span>.log(listener);</span><br><span class="line">&#125;)()</span><br></pre></td></tr></table></figure></p>
+<h2 id="使用插件"><a href="#使用插件" class="headerlink" title="使用插件"></a>使用插件</h2><p>有时候，我们可能会遇到一些chrome本身也没有提供的功能。 例如，我们希望爬虫能够和页面进行交互，但是不希望页面进行url跳转。 这在chrome中也没有很好的解决方案。 这时候我们就需要用到chrome的插件功能。 启用chrome插件非常简单，在启动浏览器时添加两个参数即可：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">browser = <span class="keyword">await</span> launch(&#123;<span class="string">"headless"</span>: <span class="keyword">False</span>,</span><br><span class="line">                            <span class="string">"executablePath"</span>: <span class="string">"./chrome-win32/chrome.exe"</span>,</span><br><span class="line">                            <span class="string">"args"</span>: [<span class="string">'--load-extension=../chrome_extension/'</span>,</span><br><span class="line">                                     <span class="string">'--disable-extensions-except=../chrome_extension/'</span>,]&#125;)</span><br></pre></td></tr></table></figure></p>
+<p>注意这里插件的位置必须是对于chrome.exe文件的相对路径。 我们使用<a href="https://github.com/GoogleChrome/puppeteer/issues/823" target="_blank" rel="noopener">Chrome navigation lock extension</a>中一位大牛介绍的浏览器锁插件来限制浏览器跳转，插件的下载地址如下：<a href="https://gist.github.com/GuilloOme/2bd651e5154407d2d2165278d5cd7cdb" target="_blank" rel="noopener">https://gist.github.com/GuilloOme/2bd651e5154407d2d2165278d5cd7cdb</a>。 按照说明配置好插件后，运行其中的index.js进行测试，点击其中的链接，发现页面并不会跳转，而跳转的目标会在console中打印。 效果如下：<br><img src="images/pptr/extension.png" alt="extension"></p>
+<h1 id="pyppeteer的一个坑"><a href="#pyppeteer的一个坑" class="headerlink" title="pyppeteer的一个坑"></a>pyppeteer的一个坑</h1><p>按照github上pyppeteer的项目介绍，pyppeteer应该是与puppeteer的所有api保持一致。 但我在开发过程中遇到这样一个奇怪的问题，两段等效的代码在pyppeteer中和puppeteer中运行得到的结果不同。 有兴趣可以跟进我在github上给pyppeteer作者的留言，地址：<a href="https://github.com/miyakogi/pyppeteer/issues/120" target="_blank" rel="noopener">https://github.com/miyakogi/pyppeteer/issues/120</a></p>
+<h1 id="后话"><a href="#后话" class="headerlink" title="后话"></a>后话</h1><p>在headless chrome和pptr的使用过程中，我确实感受到了操控一个浏览器为各种测试带来的便利。 我相信不久的将来，headless chrome将成为web安全中必不可少的工具。 然而，在目前的使用中，我认为有两点是pptr和headless chrome还不够好的。 第一是对请求和响应的控制还不够方便。 现在要修改http请求头或者使用post方式全球，只能通过拦截request来做修改。 但对于response，我们是没有办法进行修改的。 也就是说，如果我们想对于返回的response中注入一段js代码，pptr无法实现，必须通过插件才能做到。 第二则是对于鼠标的控制非常不友好。 在DevTools Protocol中鼠标相关的方法我们都要输入x、y坐标作为参数，非常不方便。 但DOM树中鼠标事件有很多，使得现在要像用户一样移动鼠标比较困难。 这两点还值得改进。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://chromedevtools.github.io/devtools-protocol/" target="_blank" rel="noopener">Chrome DevTools Protocol</a></li>
+<li><a href="https://xzfile.aliyuncs.com/upload/zcon/2018/11_WEB2.0%E5%90%AF%E5%8F%91%E5%BC%8F%E7%88%AC%E8%99%AB%E5%AE%9E%E6%88%98_%E7%8C%AA%E7%8C%AA%E4%BE%A0.pdf" target="_blank" rel="noopener">WEB 2.0 启发式爬⾍实战</a></li>
+<li><a href="https://github.com/GoogleChrome/puppeteer/issues/823" target="_blank" rel="noopener">Chrome navigation lock extension</a></li>
+<li><a href="https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md" target="_blank" rel="noopener">puppeteer api文档</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/vulns-scanner/" rel="tag"># vulns scanner</a>
+          
+            <a href="/tags/xss/" rel="tag"># xss</a>
+          
+            <a href="/tags/chrome/" rel="tag"># chrome</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/01/xss过滤速查表/" rel="next" title="xss过滤速查表">
+                <i class="fa fa-chevron-left"></i> xss过滤速查表
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/zy.jpg"
+                alt="eviloH" />
+            
+              <p class="site-author-name" itemprop="name">eviloH</p>
+              <p class="site-description motion-element" itemprop="description">记录平淡的生活</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#相关概念简介"><span class="nav-number">2.</span> <span class="nav-text">相关概念简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#headless-chrome"><span class="nav-number">2.1.</span> <span class="nav-text">headless chrome</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DevTools-Protocol"><span class="nav-number">2.2.</span> <span class="nav-text">DevTools Protocol</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#puppeteer和pyppeteer"><span class="nav-number">2.3.</span> <span class="nav-text">puppeteer和pyppeteer</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用技巧"><span class="nav-number">3.</span> <span class="nav-text">常用技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#拦截请求"><span class="nav-number">3.1.</span> <span class="nav-text">拦截请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#植入js代码"><span class="nav-number">3.2.</span> <span class="nav-text">植入js代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注册函数"><span class="nav-number">3.3.</span> <span class="nav-text">注册函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用开发者工具"><span class="nav-number">3.4.</span> <span class="nav-text">使用开发者工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用插件"><span class="nav-number">3.5.</span> <span class="nav-text">使用插件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#pyppeteer的一个坑"><span class="nav-number">4.</span> <span class="nav-text">pyppeteer的一个坑</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">5.</span> <span class="nav-text">后话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">eviloH</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: '1533468906000', 
+            owner: 'eviloH',
+            repo: 'eviloH.github.io',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '534cb13bbf0ae4c3f2e7426b2988fddb17d0936a',
+            
+                client_id: 'e8e81f52a3b78b4ff0e4'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("ygFLJkCejHN4FBRm1MNotECL-gzGzoHsz", "D41dFC6ScJB4YxsA8qiAESs1");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
