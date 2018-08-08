@@ -88,7 +88,7 @@
 <meta property="og:description" content="前言本文是对Web跨站资源共享（CORS）配置安全漏洞报告及最佳部署实践一文的补充。 该文章介绍了CORS配置错误的基本概念以及漏洞带来的危害，并且总结了七种常见的配置错误种类。 本文从漏洞检测的角度，复现各种配置错误的环境，并且给出检测的方法。 基本知识同源策略（Same Origin Policy, SOP）同源策略是浏览器级别的安全机制。 它的核心观点是，来自不同源的的Web应用不共享任何资">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://eviloh.github.io/images/cors/cors_header.png">
-<meta property="og:updated_time" content="2018-08-08T14:37:31.887Z">
+<meta property="og:updated_time" content="2018-08-08T14:43:01.386Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="CORS配置错误检测方法">
 <meta name="twitter:description" content="前言本文是对Web跨站资源共享（CORS）配置安全漏洞报告及最佳部署实践一文的补充。 该文章介绍了CORS配置错误的基本概念以及漏洞带来的危害，并且总结了七种常见的配置错误种类。 本文从漏洞检测的角度，复现各种配置错误的环境，并且给出检测的方法。 基本知识同源策略（Same Origin Policy, SOP）同源策略是浏览器级别的安全机制。 它的核心观点是，来自不同源的的Web应用不共享任何资">
@@ -360,6 +360,9 @@
 <h2 id="缺少Vary-Origin头"><a href="#缺少Vary-Origin头" class="headerlink" title="缺少Vary: Origin头"></a>缺少Vary: Origin头</h2><p>如果一个资源享有多个域名，它需要对不同域名的请求包生成不同的ACAO头。 如果一个请求的响应被缓存，且返回中没有Vary: Origin字段，可能会导致其它域名的请求失效。</p>
 <p>检测方法：<br>无法检测，因为我们不知道一个服务器是否共享多个域名。</p>
 <h1 id="后话"><a href="#后话" class="headerlink" title="后话"></a>后话</h1><p>在实际攻击中，CORS访问控制漏洞应该与XSS、 CSRF等漏洞配合使用。 遗憾的是自己还没遇到过这种情况。 感觉理解得不够深刻。 期待日后相见。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://mp.weixin.qq.com/s/jMUfdGChCYxpSXfmAlyk4g" target="_blank" rel="noopener">Web跨站资源共享（CORS）配置安全漏洞报告及最佳部署实践</a></li>
+</ul>
 
       
     </div>
@@ -401,6 +404,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/" rel="prev" title="pptr的一些缺陷和一个可靠的解决方案">
+                pptr的一些缺陷和一个可靠的解决方案 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -488,7 +495,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -534,7 +541,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基本知识"><span class="nav-number">2.</span> <span class="nav-text">基本知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#同源策略（Same-Origin-Policy-SOP）"><span class="nav-number">2.1.</span> <span class="nav-text">同源策略（Same Origin Policy, SOP）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#跨域资源共享-Cross-Origin-Resource-Sharing-CORS"><span class="nav-number">2.2.</span> <span class="nav-text">跨域资源共享(Cross-Origin Resource Sharing, CORS)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CORS误配置及检测方法"><span class="nav-number">3.</span> <span class="nav-text">CORS误配置及检测方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#反射Origin头"><span class="nav-number">3.1.</span> <span class="nav-text">反射Origin头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Origin校验错误"><span class="nav-number">3.2.</span> <span class="nav-text">Origin校验错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信任null"><span class="nav-number">3.3.</span> <span class="nav-text">信任null</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS域信任HTTP域"><span class="nav-number">3.4.</span> <span class="nav-text">HTTPS域信任HTTP域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信任自身任意子域"><span class="nav-number">3.5.</span> <span class="nav-text">信任自身任意子域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Origin-与-Credentials-true-共用"><span class="nav-number">3.6.</span> <span class="nav-text">Origin: *与 Credentials: true 共用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缺少Vary-Origin头"><span class="nav-number">3.7.</span> <span class="nav-text">缺少Vary: Origin头</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">4.</span> <span class="nav-text">后话</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基本知识"><span class="nav-number">2.</span> <span class="nav-text">基本知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#同源策略（Same-Origin-Policy-SOP）"><span class="nav-number">2.1.</span> <span class="nav-text">同源策略（Same Origin Policy, SOP）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#跨域资源共享-Cross-Origin-Resource-Sharing-CORS"><span class="nav-number">2.2.</span> <span class="nav-text">跨域资源共享(Cross-Origin Resource Sharing, CORS)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CORS误配置及检测方法"><span class="nav-number">3.</span> <span class="nav-text">CORS误配置及检测方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#反射Origin头"><span class="nav-number">3.1.</span> <span class="nav-text">反射Origin头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Origin校验错误"><span class="nav-number">3.2.</span> <span class="nav-text">Origin校验错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信任null"><span class="nav-number">3.3.</span> <span class="nav-text">信任null</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS域信任HTTP域"><span class="nav-number">3.4.</span> <span class="nav-text">HTTPS域信任HTTP域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信任自身任意子域"><span class="nav-number">3.5.</span> <span class="nav-text">信任自身任意子域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Origin-与-Credentials-true-共用"><span class="nav-number">3.6.</span> <span class="nav-text">Origin: *与 Credentials: true 共用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缺少Vary-Origin头"><span class="nav-number">3.7.</span> <span class="nav-text">缺少Vary: Origin头</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">4.</span> <span class="nav-text">后话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
             
 
           </div>

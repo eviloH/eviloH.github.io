@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="vulns scanner,pptr," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在之前的一篇博客：headless chrome &amp;amp; pptr初探中，我研究了puppeteer和pyppeteer的一些基本功能和常用技巧，并且总结了一下踩过的坑。 最近使用pyppeteer进行安全开发的过程中，发现使用pptr做漏洞扫描器有一些根本上的缺陷。 结果无数次折腾，终于想到了一种相对可靠的解决方案，在此记录。 pptr的缺陷POST请求和headers修改极不方便由于p">
+<meta name="keywords" content="vulns scanner,pptr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="pptr的一些缺陷和一个可靠的解决方案">
+<meta property="og:url" content="https://eviloh.github.io/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/index.html">
+<meta property="og:site_name" content="eviloH&#39;s space">
+<meta property="og:description" content="前言在之前的一篇博客：headless chrome &amp;amp; pptr初探中，我研究了puppeteer和pyppeteer的一些基本功能和常用技巧，并且总结了一下踩过的坑。 最近使用pyppeteer进行安全开发的过程中，发现使用pptr做漏洞扫描器有一些根本上的缺陷。 结果无数次折腾，终于想到了一种相对可靠的解决方案，在此记录。 pptr的缺陷POST请求和headers修改极不方便由于p">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-08-08T15:41:42.288Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="pptr的一些缺陷和一个可靠的解决方案">
+<meta name="twitter:description" content="前言在之前的一篇博客：headless chrome &amp;amp; pptr初探中，我研究了puppeteer和pyppeteer的一些基本功能和常用技巧，并且总结了一下踩过的坑。 最近使用pyppeteer进行安全开发的过程中，发现使用pptr做漏洞扫描器有一些根本上的缺陷。 结果无数次折腾，终于想到了一种相对可靠的解决方案，在此记录。 pptr的缺陷POST请求和headers修改极不方便由于p">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://eviloh.github.io/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/"/>
+
+
+
+
+
+  <title>pptr的一些缺陷和一个可靠的解决方案 | eviloH's space</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">eviloH's space</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">想写就写</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://eviloh.github.io/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="eviloH">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/zy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="eviloH's space">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">pptr的一些缺陷和一个可靠的解决方案</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-08T22:39:33+08:00">
+                2018-08-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/08/08/pptr的一些缺陷和一个可靠的解决方案/" class="leancloud_visitors" data-flag-title="pptr的一些缺陷和一个可靠的解决方案">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在之前的一篇博客：<a href="https://eviloh.github.io/2018/08/05/headless-chrome-pptr%E5%88%9D%E6%8E%A2/">headless chrome &amp; pptr初探</a>中，我研究了puppeteer和pyppeteer的一些基本功能和常用技巧，并且总结了一下踩过的坑。 最近使用pyppeteer进行安全开发的过程中，发现使用pptr做漏洞扫描器有一些根本上的缺陷。 结果无数次折腾，终于想到了一种相对可靠的解决方案，在此记录。</p>
+<h1 id="pptr的缺陷"><a href="#pptr的缺陷" class="headerlink" title="pptr的缺陷"></a>pptr的缺陷</h1><h2 id="POST请求和headers修改极不方便"><a href="#POST请求和headers修改极不方便" class="headerlink" title="POST请求和headers修改极不方便"></a>POST请求和headers修改极不方便</h2><p>由于pptr在使用上尽可能地模拟chrome的用户操作，对POST请求和headers修改也和chrome一样非常麻烦。 现在要发送post请求或更改headers，我们必须先用page.goto()发送一个GET请求，然后使用RequestInterception拦截该请求，再使用overrides将请求改为POST方法或更改headers，完整代码如下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">page.setRequestInterceptionEnabled(<span class="literal">true</span>);</span><br><span class="line">page.on(<span class="string">'request'</span>, request =&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> overrides = &#123;</span><br><span class="line">        method : <span class="string">'POST'</span>,</span><br><span class="line">        postData : <span class="string">'my=data'</span>,</span><br><span class="line">        headers : headers,</span><br><span class="line">    &#125;</span><br><span class="line">    request.continue(overrides)</span><br><span class="line">&#125;);</span><br><span class="line">page.goto(<span class="string">"http://www.example.com"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>这种做法是及其不优雅的。 而且pptr也不打算支持post功能，详情可参考<a href="https://github.com/GoogleChrome/puppeteer/issues/1062" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/1062</a></p>
+<h2 id="无法对response做任何更改"><a href="#无法对response做任何更改" class="headerlink" title="无法对response做任何更改"></a>无法对response做任何更改</h2><p>这个问题和上面的问题类似，都是因为pptr不打算像Burpsuite那样完全控制出入流量，而是模拟正常用户。 但有时候我们会希望在渲染DOM树前就插入一段js代码来变更页面行为。 这个功能pptr也不打算支持，详情可参考<a href="https://github.com/GoogleChrome/puppeteer/issues/599" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/599</a></p>
+<h2 id="headless模式无法使用插件"><a href="#headless模式无法使用插件" class="headerlink" title="headless模式无法使用插件"></a>headless模式无法使用插件</h2><p>上一篇博客中我介绍了使用chrome插件来阻止页面跳转，遗憾的是，这种方法只有在<code>headless: false</code>的时候才能使用，当开启headless模式时，插件就不会被加载了。 详情可参考<a href="https://github.com/GoogleChrome/puppeteer/issues/823" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/823</a></p>
+<h2 id="pyppeteer的一个bug"><a href="#pyppeteer的一个bug" class="headerlink" title="pyppeteer的一个bug"></a>pyppeteer的一个bug</h2><p>如果无法使用chrome插件，还有什么办法限制浏览器跳转呢？实际上，window中有个事件<code>window.onbeforeunload</code>可以做到在页面跳转时弹窗提醒。 我们再将page设置为默认拒绝所有的弹窗，页面便不会跳转了。 代码如下：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> puppeteer = <span class="built_in">require</span>(<span class="string">'puppeteer'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> browser = <span class="keyword">await</span> puppeteer.launch(&#123;</span><br><span class="line">      headless: <span class="literal">false</span>,</span><br><span class="line">      args: [<span class="string">'--ignore-certificate-errors'</span>,</span><br><span class="line">             <span class="string">'--allow-running-insecure-content'</span>,</span><br><span class="line">             <span class="string">'--disable-xss-auditor'</span>,</span><br><span class="line">             <span class="string">'--no-sandbox'</span>,</span><br><span class="line">             <span class="string">'--disable-setuid-sandbox'</span>]</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">const</span> page = <span class="keyword">await</span> browser.newPage();</span><br><span class="line">  <span class="keyword">await</span> page.on(<span class="string">'dialog'</span>, (dialog)=&gt;dialog.dismiss())</span><br><span class="line">  <span class="keyword">await</span> page.goto(<span class="string">"http://www.example.com"</span>)</span><br><span class="line">  <span class="keyword">await</span> page.evaluate(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="built_in">window</span>.onbeforeunload = <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="string">"stop navigating"</span>;</span><br><span class="line">      &#125;;</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">await</span> page.evaluate(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      location.href=<span class="string">"about:blank"</span>;</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">await</span> page.waitFor(<span class="number">1000</span>);</span><br><span class="line">  <span class="keyword">await</span> browser.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">(<span class="keyword">async</span> () =&gt; &#123; <span class="keyword">await</span> main() &#125;)()</span><br></pre></td></tr></table></figure></p>
+<p>但是，上述代码在pyppeteer下不能阻止跳转。 经过与作者联系，确认为一个bug。 详情可参考：<a href="https://github.com/miyakogi/pyppeteer/issues/120" target="_blank" rel="noopener">https://github.com/miyakogi/pyppeteer/issues/120</a>。</p>
+<h1 id="一个可靠的解决方法"><a href="#一个可靠的解决方法" class="headerlink" title="一个可靠的解决方法"></a>一个可靠的解决方法</h1><p>从上面的例子中，我们可以看到，pptr在对请求和响应的控制存在很大的问题。 那么我们能不能转变思路，不使用puppeteer来处理请求和响应，只用它渲染DOM树呢？翻了翻puppeteer的api，我找到了这样一个方法：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">page.setContent(html)</span><br><span class="line">- html &lt;string&gt; HTML markup to assign to the page.</span><br><span class="line">- returns: <span class="xml"><span class="tag">&lt;<span class="name">Promise</span>&gt;</span></span></span><br></pre></td></tr></table></figure></p>
+<p>该方法接受一个html字符串，并渲染到指定页面上。 于是一套结合requests模块和pptr模块的控制流程顺势而生：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">from</span> pyppeteer <span class="keyword">import</span> launch</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    browser = <span class="keyword">await</span> launch(&#123;<span class="string">"headless"</span>: <span class="keyword">False</span>,</span><br><span class="line">                            <span class="string">"args"</span>: [<span class="string">'--ignore-certificate-errors'</span></span><br><span class="line">                                     <span class="string">'--allow-running-insecure-content'</span>,</span><br><span class="line">                                     <span class="string">'--disable-xss-auditor'</span>,</span><br><span class="line">                                     <span class="string">'--no-sandbox'</span>,</span><br><span class="line">                                     <span class="string">'--disable-setuid-sandbox'</span>]&#125;)</span><br><span class="line">    page = <span class="keyword">await</span> browser.newPage()</span><br><span class="line">    r = requests.get(<span class="string">'http://www.example.com'</span>) <span class="comment"># 在这里修改请求方法和内容</span></span><br><span class="line">    html = r.text + <span class="string">'&lt;script&gt;window.onload=function()&#123;window.onbeforeunload = function(event) &#123;return "stop navigating";&#125;&lt;/script&gt;'</span> <span class="comment"># 在这里修改响应内容</span></span><br><span class="line">    page.setContent(r.text) <span class="comment"># 在这里渲染页面，并执行后续交互操作</span></span><br><span class="line">    <span class="keyword">await</span> browser.close()</span><br><span class="line"></span><br><span class="line">asyncio.get_event_loop().run_until_complete(main())</span><br></pre></td></tr></table></figure></p>
+<p>上述代码中我们使用requests模块来处理请求，因此我们能够完全控制请求方法、 请求头以及响应内容。 我们可以将响应内容插入js代码来限制跳转，再交给pptr渲染。 渲染完毕之后，我们依然可以使用pptr带来的便捷操作以及强大的调试工具。</p>
+<h1 id="后话"><a href="#后话" class="headerlink" title="后话"></a>后话</h1><p>从整个开发过程中的发现问题、 思考并解决问题，我想最重要的是理解每种工具的长处和短处分别是什么。 学会扬长避短才是我们工程师最大的价值。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagesetcontenthtml" target="_blank" rel="noopener">puppeteer api文档</a></li>
+<li><a href="https://github.com/GoogleChrome/puppeteer/issues/1062" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/1062</a></li>
+<li><a href="https://github.com/GoogleChrome/puppeteer/issues/599" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/599</a></li>
+<li><a href="https://github.com/GoogleChrome/puppeteer/issues/823" target="_blank" rel="noopener">https://github.com/GoogleChrome/puppeteer/issues/823</a></li>
+<li><a href="https://github.com/miyakogi/pyppeteer/issues/120" target="_blank" rel="noopener">https://github.com/miyakogi/pyppeteer/issues/120</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/vulns-scanner/" rel="tag"># vulns scanner</a>
+          
+            <a href="/tags/pptr/" rel="tag"># pptr</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/06/CORS配置错误检测方法/" rel="next" title="CORS配置错误检测方法">
+                <i class="fa fa-chevron-left"></i> CORS配置错误检测方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/zy.jpg"
+                alt="eviloH" />
+            
+              <p class="site-author-name" itemprop="name">eviloH</p>
+              <p class="site-description motion-element" itemprop="description">记录平淡的生活</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#pptr的缺陷"><span class="nav-number">2.</span> <span class="nav-text">pptr的缺陷</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#POST请求和headers修改极不方便"><span class="nav-number">2.1.</span> <span class="nav-text">POST请求和headers修改极不方便</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#无法对response做任何更改"><span class="nav-number">2.2.</span> <span class="nav-text">无法对response做任何更改</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#headless模式无法使用插件"><span class="nav-number">2.3.</span> <span class="nav-text">headless模式无法使用插件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pyppeteer的一个bug"><span class="nav-number">2.4.</span> <span class="nav-text">pyppeteer的一个bug</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个可靠的解决方法"><span class="nav-number">3.</span> <span class="nav-text">一个可靠的解决方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后话"><span class="nav-number">4.</span> <span class="nav-text">后话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">eviloH</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: '1533739173000', 
+            owner: 'eviloH',
+            repo: 'eviloH.github.io',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '534cb13bbf0ae4c3f2e7426b2988fddb17d0936a',
+            
+                client_id: 'e8e81f52a3b78b4ff0e4'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("ygFLJkCejHN4FBRm1MNotECL-gzGzoHsz", "D41dFC6ScJB4YxsA8qiAESs1");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
