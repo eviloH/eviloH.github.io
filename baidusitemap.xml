@@ -5,7 +5,7 @@
     
   <url>
     <loc>https://eviloh.github.io/2018/08/06/CORS%E9%85%8D%E7%BD%AE%E9%94%99%E8%AF%AF%E6%A3%80%E6%B5%8B%E6%96%B9%E6%B3%95/</loc>
-    <lastmod>2018-08-08T14:34:39.960Z</lastmod>
+    <lastmod>2018-08-08T14:37:31.887Z</lastmod>
     <data>
         <display>
         <title>CORS配置错误检测方法</title>
@@ -51,9 +51,9 @@
         <title>XSS Filter Evasion Cheat Sheet研究</title>
         <pubTime>2018-07-30T14:02:19.000Z</pubTime>
         
-        <tag>vulns scanner</tag>
-         
         <tag>XSS</tag>
+         
+        <tag>vulns scanner</tag>
          
          
            
