@@ -4,6 +4,25 @@
 
     
   <url>
+    <loc>https://eviloh.github.io/2018/08/06/CORS%E9%85%8D%E7%BD%AE%E9%94%99%E8%AF%AF%E6%A3%80%E6%B5%8B%E6%96%B9%E6%B3%95/</loc>
+    <lastmod>2018-08-08T14:34:39.960Z</lastmod>
+    <data>
+        <display>
+        <title>CORS配置错误检测方法</title>
+        <pubTime>2018-08-06T14:17:34.000Z</pubTime>
+        
+        <tag>CORS</tag>
+         
+        <tag>vulns scanner</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>https://eviloh.github.io/2018/08/05/headless-chrome-pptr%E5%88%9D%E6%8E%A2/</loc>
     <lastmod>2018-08-06T12:15:59.140Z</lastmod>
     <data>
@@ -11,9 +30,9 @@
         <title>headless chrome & pptr初探</title>
         <pubTime>2018-08-05T11:35:06.000Z</pubTime>
         
-        <tag>xss</tag>
-         
         <tag>vulns scanner</tag>
+         
+        <tag>xss</tag>
          
         <tag>chrome</tag>
          
