@@ -51,9 +51,9 @@
         <title>CORS配置错误检测方法</title>
         <pubTime>2018-08-06T14:17:34.000Z</pubTime>
         
-        <tag>vulns scanner</tag>
-         
         <tag>CORS</tag>
+         
+        <tag>vulns scanner</tag>
          
          
            
@@ -70,9 +70,9 @@
         <title>headless chrome & pptr初探</title>
         <pubTime>2018-08-05T11:35:06.000Z</pubTime>
         
-        <tag>xss</tag>
-         
         <tag>vulns scanner</tag>
+         
+        <tag>xss</tag>
          
         <tag>pptr</tag>
          
