@@ -83,7 +83,7 @@
 <meta name="description" content="记录平淡的生活">
 <meta property="og:type" content="website">
 <meta property="og:title" content="eviloH&#39;s space">
-<meta property="og:url" content="https://eviloh.github.io/tags/xss/index.html">
+<meta property="og:url" content="https://eviloh.github.io/tags/XSS/index.html">
 <meta property="og:site_name" content="eviloH&#39;s space">
 <meta property="og:description" content="记录平淡的生活">
 <meta property="og:locale" content="zh-Hans">
@@ -119,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://eviloh.github.io/tags/xss/"/>
+  <link rel="canonical" href="https://eviloh.github.io/tags/XSS/"/>
 
 
 
 
 
-  <title>标签: xss | eviloH's space</title>
+  <title>标签: XSS | eviloH's space</title>
   
 
 
@@ -235,7 +235,7 @@
 
     <div id="posts" class="posts-collapse">
       <div class="collection-title">
-        <h1>xss<small>标签</small>
+        <h1>XSS<small>标签</small>
         </h1>
       </div>
 
@@ -247,9 +247,9 @@
 
       <h2 class="post-title">
         
-            <a class="post-title-link" href="/2018/08/05/headless-chrome-pptr初探/" itemprop="url">
+            <a class="post-title-link" href="/2018/08/01/xss过滤速查表/" itemprop="url">
               
-                <span itemprop="name">headless chrome & pptr初探</span>
+                <span itemprop="name">xss过滤速查表</span>
               
             </a>
         
@@ -257,9 +257,37 @@
 
       <div class="post-meta">
         <time class="post-time" itemprop="dateCreated"
-              datetime="2018-08-05T19:35:06+08:00"
-              content="2018-08-05" >
-          08-05
+              datetime="2018-08-01T23:42:15+08:00"
+              content="2018-08-01" >
+          08-01
+        </time>
+      </div>
+
+    </header>
+  </article>
+
+
+      
+        
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h2 class="post-title">
+        
+            <a class="post-title-link" href="/2018/07/30/XSS-Filter-Evasion-Cheat-Sheet研究/" itemprop="url">
+              
+                <span itemprop="name">XSS Filter Evasion Cheat Sheet研究</span>
+              
+            </a>
+        
+      </h2>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated"
+              datetime="2018-07-30T22:02:19+08:00"
+              content="2018-07-30" >
+          07-30
         </time>
       </div>
 
@@ -643,47 +671,6 @@
               success: function(newcounter) {
                 var $element = $(document.getElementById(url));
                 $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
-              },
-              error: function(newcounter, error) {
-                console.log('Failed to create');
-              }
-            });
-          }
-        },
-        error: function(error) {
-          console.log('Error:' + error.code + " " + error.message);
-        }
-      });
-    }
-
-    $(function() {
-      var Counter = AV.Object.extend("Counter");
-      if ($('.leancloud_visitors').length == 1) {
-        addCount(Counter);
-      } else if ($('.post-title-link').length > 1) {
-        showTime(Counter);
-      }
-    });
-  </script>
-
-
-
-  
-
-  
-
-  
-  
-
-  
-
-  
-
-  
-
-</body>
-</html>
-$element.find('.leancloud-visitors-count').text(newcounter.get('time'));
               },
               error: function(newcounter, error) {
                 console.log('Failed to create');
